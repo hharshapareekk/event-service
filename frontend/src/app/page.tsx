@@ -102,7 +102,9 @@ export default function HomePage() {
         <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div className="flex items-start gap-3">
             <div className="mt-1 h-10 w-10 rounded-2xl border border-white/10 bg-white/[0.04] grid place-items-center">
-              <img src="/next.svg" alt="" className="opacity-70" />
+              <span className="text-[12px] font-semibold tracking-wide text-white/70">
+                ES
+              </span>
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
