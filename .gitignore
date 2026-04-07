@@ -4,6 +4,13 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+### Secrets ###
+.env
+.env.*
+
+### Archives ###
+*.zip
+
 ### STS ###
 .apt_generated
 .classpath
@@ -31,3 +38,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### OS ###
+.DS_Store
+Thumbs.db
