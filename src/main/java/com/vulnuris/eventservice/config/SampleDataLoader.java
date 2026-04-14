@@ -231,7 +231,90 @@ public class SampleDataLoader {
                     "203.0.113.45 - - [29/Oct/2025:08:03:57 +0000] \"GET /admin HTTP/1.1\" 403 321 \"-\" \"Mozilla/5.0\""
             };
             seedWebAccess(webBundle, accessLines);
+
+            // Bundle E: Windows Security Events (based on sample CES Kafka format from teammate)
+            Bundle winSecBundle = bundleRepository.save(Bundle.builder()
+                    .bundleKey("bundle_winsec_2025-10-29")
+                    .name("Windows Security Events (sample)")
+                    .description("Windows Security event logs parsed from CES format — seeded for UI demo.")
+                    .createdAt(LocalDateTime.now())
+                    .build());
+            bundleMetadataRepository.save(BundleMetadata.builder()
+                    .bundle(winSecBundle)
+                    .payloadJson("{\"source\":\"windows_security\",\"format\":\"ces_json\",\"note\":\"seeded demo\"}")
+                    .build());
+            seedWindowsSecurity(winSecBundle);
         };
+    }
+
+    private void seedWindowsSecurity(Bundle bundle) {
+        Object[][] events = {
+            {"2025-10-29 12:54:45", "WIN-SRV-01.contoso.local", "user7", "116.227.215.209", null, null, null, "windows_security", "TASK_CREATE", "event_4698", "SUCCESS", 5, "Scheduled task created by user7 — possible persistence mechanism"},
+            {"2025-10-29 12:55:10", "WIN-SRV-01.contoso.local", "user7", "116.227.215.209", null, null, null, "windows_security", "LOGON", "event_4624", "SUCCESS", 3, "Interactive logon from external IP 116.227.215.209"},
+            {"2025-10-29 12:56:02", "WIN-DC-02.contoso.local", "user3", "10.0.1.15", null, "10.0.1.1", 389, "windows_security", "KERBEROS_TGT", "event_4768", "SUCCESS", 2, "TGT request for user3 from domain controller"},
+            {"2025-10-29 12:57:30", "WIN-SRV-01.contoso.local", "SYSTEM", null, null, null, null, "windows_security", "SERVICE_INSTALL", "event_4697", "SUCCESS", 6, "New service installed — possible lateral movement"},
+            {"2025-10-29 12:58:15", "WIN-WK-05.contoso.local", "user12", "192.168.1.45", null, "10.0.2.5", 445, "windows_security", "LOGON_FAILED", "event_4625", "FAILURE", 4, "Failed logon attempt via SMB from internal workstation"},
+            {"2025-10-29 12:59:00", "WIN-DC-02.contoso.local", "admin", "10.0.1.1", null, null, null, "windows_security", "POLICY_CHANGE", "event_4739", "SUCCESS", 7, "Domain policy modification — critical security change"},
+            {"2025-10-29 13:00:45", "WIN-SRV-01.contoso.local", "user7", "116.227.215.209", null, "10.0.2.5", 3389, "windows_security", "RDP_CONNECT", "event_4624_type10", "SUCCESS", 5, "RDP connection from external IP — suspicious remote access"},
+            {"2025-10-29 13:01:22", "WIN-SRV-01.contoso.local", "user7", null, null, null, null, "windows_security", "PRIV_ESCALATION", "event_4672", "SUCCESS", 6, "Special privileges assigned to new logon — admin token"},
+            {"2025-10-29 13:02:10", "WIN-WK-05.contoso.local", "user12", "192.168.1.45", null, "10.0.2.5", 445, "windows_security", "LOGON_FAILED", "event_4625", "FAILURE", 4, "Second failed logon attempt — possible brute force"},
+            {"2025-10-29 13:03:00", "WIN-SRV-03.contoso.local", "SYSTEM", null, null, null, null, "windows_security", "AUDIT_CLEAR", "event_1102", "SUCCESS", 7, "Security audit log cleared — anti-forensics detected"},
+            {"2025-10-29 13:04:30", "WIN-DC-02.contoso.local", "user3", "10.0.1.15", null, "10.0.1.1", 389, "windows_security", "KERBEROS_SVC", "event_4769", "SUCCESS", 3, "Service ticket request — normal Kerberos activity"},
+            {"2025-10-29 13:05:15", "WIN-SRV-01.contoso.local", "user7", "116.227.215.209", null, null, null, "windows_security", "PROCESS_CREATE", "event_4688", "SUCCESS", 5, "New process created: powershell.exe -enc [base64] — encoded command execution"},
+            {"2025-10-29 13:06:00", "WIN-SRV-01.contoso.local", "user7", null, null, "203.0.113.50", 443, "windows_security", "OUTBOUND_CONN", "event_5156", "SUCCESS", 6, "Outbound connection to known C2 IP 203.0.113.50"},
+            {"2025-10-29 13:07:45", "WIN-WK-05.contoso.local", "user12", "192.168.1.45", null, "10.0.2.5", 445, "windows_security", "LOGON", "event_4624", "SUCCESS", 3, "Successful logon after previous failures — account compromise likely"},
+            {"2025-10-29 13:08:30", "WIN-SRV-01.contoso.local", "user7", null, null, null, null, "windows_security", "FILE_SHARE_ACCESS", "event_5140", "SUCCESS", 4, "Network share accessed: \\\\WIN-DC-02\\SYSVOL — possible data exfiltration"},
+        };
+
+        int offset = 0;
+        for (Object[] row : events) {
+            offset++;
+            try {
+                LocalDateTime tsUtc = LocalDateTime.parse((String) row[0], java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                String host = (String) row[1];
+                String user = (String) row[2];
+                String srcIp = (String) row[3];
+                Integer srcPort = (Integer) row[4];
+                String dstIp = (String) row[5];
+                Integer dstPort = (Integer) row[6];
+                String sourceType = (String) row[7];
+                String action = (String) row[8];
+                String object = (String) row[9];
+                String result = (String) row[10];
+                int severity = (Integer) row[11];
+                String message = (String) row[12];
+
+                StringBuilder corrKeys = new StringBuilder("{");
+                boolean first = true;
+                if (user != null) { corrKeys.append("\"user\":\"").append(jsonEscape(user)).append("\""); first = false; }
+                if (host != null) { if (!first) corrKeys.append(","); corrKeys.append("\"host\":\"").append(jsonEscape(host)).append("\""); first = false; }
+                if (srcIp != null) { if (!first) corrKeys.append(","); corrKeys.append("\"src_ip\":\"").append(jsonEscape(srcIp)).append("\""); }
+                corrKeys.append("}");
+
+                eventRepository.save(Event.builder()
+                        .bundle(bundle)
+                        .tsUtc(tsUtc)
+                        .tsOriginal((String) row[0])
+                        .tzOffset("Z")
+                        .sourceType(sourceType)
+                        .host(host)
+                        .userName(user)
+                        .srcIp(srcIp)
+                        .srcPort(srcPort)
+                        .dstIp(dstIp)
+                        .dstPort(dstPort)
+                        .action(action)
+                        .objectValue(object)
+                        .result(result)
+                        .severity(severity)
+                        .message(message)
+                        .correlationKeysJson(corrKeys.toString())
+                        .rawRefJson("{\"source\":\"windows_security\",\"offset\":" + offset + "}")
+                        .build());
+            } catch (Exception ignored) {
+                // best-effort demo seeding
+            }
+        }
     }
 
     private static final Pattern SYSLOG_PRI = Pattern.compile("^<(\\d+)>\\d+\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+-\\s+-\\s+(.*)$");

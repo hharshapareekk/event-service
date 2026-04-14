@@ -33,6 +33,20 @@
   - `npm install`
   - `npm run dev`
 
+## Run (Standalone PostgreSQL on Windows/Mac)
+
+If you downloaded and installed PostgreSQL directly (without Docker):
+
+1. **Set up the Database Using pgAdmin 4 or psql**:
+   - Create a Login/Group Role with the name: `eventuser` and password: `eventpass` (ensure the user has login privileges).
+   - Create a new Database named: `eventdb` and set the Owner to `eventuser`.
+2. **Start backend** (from the `event-service-main` root folder):
+   - `.\mvnw.cmd spring-boot:run`
+3. **Start frontend** (from the `frontend` folder):
+   - `cd frontend`
+   - `npm install`
+   - `npm run dev`
+
 ## Configure
 
 - Frontend API base:

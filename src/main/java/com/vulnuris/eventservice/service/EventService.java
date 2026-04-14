@@ -166,10 +166,10 @@ public class EventService {
                 .result(event.getResult())
                 .severity(event.getSeverity())
                 .message(event.getMessage())
-                .metadata(event.getMetadataJson())
-                .iocs(event.getIocsJson())
-                .correlationKeys(event.getCorrelationKeysJson())
-                .rawRef(event.getRawRefJson())
+                .metadataJson(event.getMetadataJson())
+                .iocsJson(event.getIocsJson())
+                .correlationKeysJson(event.getCorrelationKeysJson())
+                .rawRefJson(event.getRawRefJson())
                 .build();
     }
 }

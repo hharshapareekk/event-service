@@ -42,3 +42,12 @@ build/
 ### OS ###
 .DS_Store
 Thumbs.db
+
+### Node / Frontend ###
+node_modules/
+.next/
+frontend/node_modules/
+frontend/.next/
+
+### JVM ###
+hs_err_pid*.log
